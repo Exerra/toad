@@ -1,0 +1,11 @@
+{
+	"id": "toad",
+	"name": "Toad",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "AI chat with the ability to add notes (& linked notes/attachments) as context, as well as generate new notes.",
+	"author": "Exerra",
+	"authorUrl": "https://exerra.xyz",
+	"fundingUrl": "https://github.com/sponsors/exerra",
+	"isDesktopOnly": false
+}
