@@ -1,4 +1,4 @@
-import { MarkdownRenderer, Notice, TFile } from "obsidian"
+import { MarkdownRenderer, MarkdownView, Notice, TFile } from "obsidian"
 import { useState, ChangeEvent, useRef } from "react"
 import { useApp } from "src/hooks/app"
 import { ExampleModal } from "./search"
@@ -239,6 +239,44 @@ const ChatPane = () => {
                             new Notice("Getting maps data for " + name)
     
                             return await searchPlacesByText(name, "places", settings!.google.maps.apiKey)
+                        }
+                    }),
+
+                    getOpenedFile: tool({
+                        description: "Get the currently opened file.",
+                        parameters: z.object({}),
+                        execute: async () => {
+                            new Notice("Getting the currently opened file")
+
+                            const view = app!.workspace.getActiveViewOfType(MarkdownView)
+
+                            if (view == null) {
+                                new Notice("Not focused on editor, getting last open file")
+
+                                // @ts-ignore
+                                const file = app?.workspace.getActiveFile()
+
+                                // @ts-ignore deleted does exist
+                                if (file == null || file.deleted == true) return "null"
+
+                                const content = app?.vault.read(file)
+
+                                let temp = {
+                                    name: file.basename,
+                                    path: file.path,
+                                    content: await content
+                                }
+
+                                return temp
+                            }
+
+                            let temp = {
+                                name: view.file?.basename,
+                                path: view.file?.path,
+                                content: view.data
+                            }
+                            
+                            return temp
                         }
                     })
                 },
