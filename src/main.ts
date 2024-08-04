@@ -13,12 +13,22 @@ import { config } from './config';
 
 export interface MyPluginSettings {
 	apiKey: string;
-	model: Parameters<OpenAIProvider>[0]
+	model: Parameters<OpenAIProvider>[0],
+	google: {
+		maps: {
+			apiKey: string
+		}
+	}
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	apiKey: '',
-	model: "gpt-4o-mini"
+	model: "gpt-4o-mini",
+	google: {
+		maps: {
+			apiKey: ""
+		}
+	}
 }
 
 const VIEW_TYPE = "react-view"
@@ -178,18 +188,29 @@ class SampleSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-				.setName("Model")
-				.setDesc("Only OpenAI GPT-4 models supported.")
-				.addDropdown(dropdown => {
-					dropdown.addOption("gpt-4o-mini", "gpt-4o-mini")
-					dropdown.addOption("gpt-4o", "gpt-4o")
+			.setName("Model")
+			.setDesc("Only OpenAI GPT-4 models supported.")
+			.addDropdown(dropdown => {
+				dropdown.addOption("gpt-4o-mini", "gpt-4o-mini")
+				dropdown.addOption("gpt-4o", "gpt-4o")
 
-					dropdown.setValue("gpt-4o-mini")
+				dropdown.setValue("gpt-4o-mini")
 
-					dropdown.onChange(async (value) => {
-						this.plugin.settings.model = value as typeof this.plugin.settings.model
-						await this.plugin.saveSettings()
-					})
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.model = value as typeof this.plugin.settings.model
+					await this.plugin.saveSettings()
 				})
+			})
+
+		new Setting(containerEl)
+			.setName('Google Maps API key')
+			.setDesc('It\'s a secret')
+			.addText(text => text
+				.setPlaceholder('Enter your secret')
+				.setValue(this.plugin.settings.google.maps.apiKey)
+				.onChange(async (value) => {
+					this.plugin.settings.google.maps.apiKey = value;
+					await this.plugin.saveSettings();
+				}));
 	}
 }

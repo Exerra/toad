@@ -9,6 +9,7 @@ import { CoreMessage, generateText, ImagePart, tool } from "ai"
 import { z } from "zod"
 import { useSettings } from "src/hooks/settings"
 import { config } from "src/config"
+import { searchPlacesByText } from "src/util/maps"
 
 const ChatPane = () => {
     const [ chatVal, setChatVal ] = useState<string>("")
@@ -184,56 +185,85 @@ const ChatPane = () => {
         setFiles([])
         
 
-        const result = await generateText({
-            model,
-            system: `The current date and time is ${new Date()}. The user has indicated their locale options as:
-            Date: lv_LV
-            Currency: lv_LV`,
-            tools: {
-                createNote: tool({
-                    description: "Creates a note in a directory based on the path and content (which does not include the title)",
-                    parameters: z.object({
-                        // name: z.string().describe("Name of the markdown note. Keep it short. Must be compatible with Android's, iOS, macOS and Linux file naming rules. Do not include the file extension."),
-                        // folder: z.string().describe("Full path of the folder in which to save the markdown note. Choose the most appropriate folder and don't ask in which folder, unless specified otherwise. Must be one of the ones returned by the getAllFolders function. Do not include the file name. Do not create folders that don't exist."),
-                        path: z.string().describe("Full path of the new Markdown note. Keep the name short. Choose the most appropriate folder and don't ask in which folder, unless specified otherwise. Folder must be one of those returned by the getAllFolders function. Do not create folders that don't exist. Do not put notes in folders that don't exist. Include the file extension."),
-                        content: z.string().describe("Content of the note in Obsidian markdown. Don't include the title, the file name is the title. The first heading level is H1.")
+        try {
+            const result = await generateText({
+                model,
+                system: `The current date and time is ${new Date()}. The user has indicated their locale options as:
+                Date: lv_LV
+                Currency: lv_LV`,
+                tools: {
+                    createNote: tool({
+                        description: "Creates a note in a directory based on the path and content (which does not include the title)",
+                        parameters: z.object({
+                            // name: z.string().describe("Name of the markdown note. Keep it short. Must be compatible with Android's, iOS, macOS and Linux file naming rules. Do not include the file extension."),
+                            // folder: z.string().describe("Full path of the folder in which to save the markdown note. Choose the most appropriate folder and don't ask in which folder, unless specified otherwise. Must be one of the ones returned by the getAllFolders function. Do not include the file name. Do not create folders that don't exist."),
+                            path: z.string().describe("Full path of the new Markdown note. Keep the name short. Choose the most appropriate folder and don't ask in which folder, unless specified otherwise. Folder must be one of those returned by the getAllFolders function. Do not create folders that don't exist. Do not put notes in folders that don't exist. Include the file extension."),
+                            content: z.string().describe("Content of the note in Obsidian markdown. Don't include the title, the file name is the title. The first heading level is H1.")
+                        }),
+                        execute: async ({ path, content }) => {
+                            // let path = `${folder}/${name}.md`
+                            // console.log(name)
+                            createNote(path, content, app!)
+    
+                            new Notice(path)
+    
+                            return "Created a note at: " + path
+                        }
                     }),
-                    execute: async ({ path, content }) => {
-                        // let path = `${folder}/${name}.md`
-                        // console.log(name)
-                        createNote(path, content, app!)
-
-                        new Notice(path)
-
-                        return "Created a note at: " + path
-                    }
-                }),
-
-                // seperated in order to not cause high token usage when the create note func isnt needed
-                getAllFolders: tool({
-                    description: "Get all folders",
-                    parameters: z.object({}),
-                    execute: async () => {
-                        // @ts-ignore
-                        return foldersArr.join("\n")
-                    }
-                })
-            },
-            maxToolRoundtrips: 10,
-            messages: messages,
-            maxRetries: 3,
-        })
-
-        messages = [...messages, ...result.responseMessages]
-
-        await setAiChatHistory(messages)
-
-        let modelDiv = document.getElementById("ex-ai-markdown")?.createDiv("ex-ai-bubble ex-ai-model")
-
-        // @ts-ignore
-		MarkdownRenderer.render(app!, result.text, modelDiv!, "", mdRef.current)
-
-        console.log(messages)
+    
+                    // seperated in order to not cause high token usage when the create note func isnt needed
+                    getAllFolders: tool({
+                        description: "Get all folders",
+                        parameters: z.object({}),
+                        execute: async () => {
+                            // @ts-ignore
+                            return foldersArr.join("\n")
+                        }
+                    }),
+    
+                    getMapsData: tool({
+                        description: "Get Google Maps Places API data for a text query. That includes geolocation data, address, rating, etc. ALWAYS use this whenever geolocation data is needed.",
+                        parameters: z.object({
+                            name: z.string().describe("Name of the place to search")
+                        }),
+                        execute: async ({ name }) => {
+                            console.log("getting maps data for " + name)
+                            new Notice("Getting maps data for " + name)
+                            const res = await fetch("https://places.googleapis.com/v1/places:searchText?fields=places&key=AIzaSyCejmQBzR22coREHX6Ay4W7aGN1NRDt0go", {
+                                method: "POST",
+                                body: JSON.stringify({
+                                    textQuery: name
+                                }) 
+                            })
+    
+                            const data = await res.json()
+    
+                            delete data.places[0].reviews
+                            delete data.places[0].viewport
+    
+                            return await searchPlacesByText(name, "places", settings!.google.maps.apiKey)
+                        }
+                    })
+                },
+                maxToolRoundtrips: 100, // mostly debug, potential setting
+                messages: messages,
+                maxRetries: 3,
+            })
+    
+            messages = [...messages, ...result.responseMessages]
+    
+            await setAiChatHistory(messages)
+    
+            let modelDiv = document.getElementById("ex-ai-markdown")?.createDiv("ex-ai-bubble ex-ai-model")
+    
+            // @ts-ignore
+            MarkdownRenderer.render(app!, result.text, modelDiv!, "", mdRef.current)
+    
+            console.log(messages)
+        } catch (err) {
+            new Notice("AI errored out")
+            console.log(err)
+        }
         // console.log(convertToCoreMessages(result.responseMessages))
     }
 
