@@ -23,6 +23,9 @@ export interface MyPluginSettings {
 		bing: {
 			apiKey: string
 		}
+	},
+	limits: {
+		getPageContents: number;
 	}
 }
 
@@ -38,6 +41,9 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 		bing: {
 			apiKey: ""
 		}
+	},
+	limits: {
+		getPageContents: 4
 	}
 }
 

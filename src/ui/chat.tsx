@@ -325,7 +325,7 @@ const ChatPane = () => {
                     }),
 
                     getPageContents: tool({
-                        description: "Get the HTML contents for a URL. Does not include linked content such as CSS, JS, etc. You can repeat this function in order to crawl outwards from a page you've already used getPageContents for. You can also use this after running the getSearchData function in order to get more context.",
+                        description: `Get the HTML contents for a URL. Does not include linked content such as CSS, JS, etc. You can repeat this function in order to crawl outwards from a page you've already used getPageContents for. You can also use this after running the getSearchData function in order to get more context. You can only run this ${settings?.limits.getPageContents} times.`,
                         parameters: z.object({
                             url: z.string().url().describe("URL of the page to get the contents of")
                         }),
