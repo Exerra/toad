@@ -229,17 +229,6 @@ const ChatPane = () => {
                         execute: async ({ name }) => {
                             console.log("getting maps data for " + name)
                             new Notice("Getting maps data for " + name)
-                            const res = await fetch("https://places.googleapis.com/v1/places:searchText?fields=places&key=AIzaSyCejmQBzR22coREHX6Ay4W7aGN1NRDt0go", {
-                                method: "POST",
-                                body: JSON.stringify({
-                                    textQuery: name
-                                }) 
-                            })
-    
-                            const data = await res.json()
-    
-                            delete data.places[0].reviews
-                            delete data.places[0].viewport
     
                             return await searchPlacesByText(name, "places", settings!.google.maps.apiKey)
                         }
