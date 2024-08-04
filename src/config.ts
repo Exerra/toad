@@ -1,3 +1,4 @@
 export const config = {
-    name: "Toad"
+    name: "Toad",
+    icon: "krupitis" // Lucide icon
 }
