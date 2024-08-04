@@ -319,7 +319,7 @@ const ChatPane = () => {
     return (
         <div id="ex-ai">
             <h1 style={{ marginBottom: 0 }}>{config.name}</h1>
-            <p>Model - OpenAI gpt-4o-mini</p>
+            <p>OpenAI {settings?.model}</p>
             <br />
             <br />
 
