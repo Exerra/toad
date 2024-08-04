@@ -43,7 +43,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 		}
 	},
 	limits: {
-		getPageContents: 4
+		getPageContents: 2
 	}
 }
 

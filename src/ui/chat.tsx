@@ -192,12 +192,17 @@ const ChatPane = () => {
 		fileValues = []
 		setFile([])
         setFiles([])
+
+        let systemInstructions = [
+            'If a user asks you something about "this" without no extra context, they more than likely want to talk about the currently open note.',
+            'ALWAYS use getMapsData whenever geolocation data is needed.',
+        ]
         
 
         try {
             const result = await generateText({
                 model,
-                system: `The current date and time is ${new Date()}. The user has indicated their locale options as:
+                system: `${systemInstructions.join(" ")}The current date and time is ${new Date()}. The user has indicated their locale options as:
                 Date: lv_LV
                 Currency: lv_LV`,
                 tools: {
@@ -287,7 +292,7 @@ const ChatPane = () => {
                     }),
 
                     getOpenedFile: tool({
-                        description: "Get the currently opened file.",
+                        description: `Get the currently opened file.`,
                         parameters: z.object({}),
                         execute: async () => {
                             new Notice("Getting the currently opened file")
