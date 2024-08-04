@@ -18,6 +18,11 @@ export interface MyPluginSettings {
 		maps: {
 			apiKey: string
 		}
+	},
+	azure: {
+		bing: {
+			apiKey: string
+		}
 	}
 }
 
@@ -26,6 +31,11 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	model: "gpt-4o-mini",
 	google: {
 		maps: {
+			apiKey: ""
+		}
+	},
+	azure: {
+		bing: {
 			apiKey: ""
 		}
 	}
@@ -210,6 +220,17 @@ class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.google.maps.apiKey)
 				.onChange(async (value) => {
 					this.plugin.settings.google.maps.apiKey = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Bing API key')
+			.setDesc('It\'s a secret')
+			.addText(text => text
+				.setPlaceholder('Enter your secret')
+				.setValue(this.plugin.settings.azure.bing.apiKey)
+				.onChange(async (value) => {
+					this.plugin.settings.azure.bing.apiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}

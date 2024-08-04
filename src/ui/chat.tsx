@@ -10,6 +10,7 @@ import { z } from "zod"
 import { useSettings } from "src/hooks/settings"
 import { config } from "src/config"
 import { searchPlacesByText } from "src/util/maps"
+import { BingSearch } from "src/types/bing"
 
 const ChatPane = () => {
     const [ chatVal, setChatVal ] = useState<string>("")
@@ -221,11 +222,54 @@ const ChatPane = () => {
     
                     // seperated in order to not cause high token usage when the create note func isnt needed
                     getAllFolders: tool({
-                        description: "Get all folders",
+                        description: "Get all folders. ALWAYS use this before running createNote.",
                         parameters: z.object({}),
                         execute: async () => {
                             // @ts-ignore
                             return foldersArr.join("\n")
+                        }
+                    }),
+
+                    getSearchData: tool({
+                        description: "Get search engine results for a text query. You can use this if you have limited knowledge on a topic.",
+                        parameters: z.object({
+                            query: z.string().describe("Search query that is NOT URL encoded."),
+                            onlyLinks: z.boolean().describe("When false, it returns the full Bing search results (descriptions, etc), and if false it just returns the relevant URLs. Set to true if the token limit is getting approached."),
+                            imageSearch: z.boolean().describe("Whether to search for images. If true, onlyLinks is ignored.")
+                        }),
+                        execute: async ({ query, onlyLinks, imageSearch }) => {
+                            new Notice("Searching for " + query)
+
+                            const res = await fetch(`https://api.bing.microsoft.com/v7.0/${imageSearch ? "images/" : ""}search?q=` + encodeURIComponent(query) + (imageSearch ? "&count=5" : ""), {
+                                headers: {
+                                   "Ocp-Apim-Subscription-Key": settings?.azure.bing.apiKey! 
+                                }
+                            })
+
+                            const data = await res.json() as BingSearch
+
+                            if (imageSearch) {
+                                // @ts-ignore
+                                return data.value
+                            }
+
+                            if (onlyLinks) {
+                                let links: string[] = []
+    
+                                for (let link of data.webPages.value) {
+                                    let url = link.displayUrl
+    
+                                    let deepLinks: string[] = []
+    
+                                    if ("deepLinks" in link) deepLinks = link.deepLinks!.map(deepLink => (deepLink.url))
+    
+                                    links = [...links, url, ...deepLinks!]
+                                }
+    
+                                return links
+                            }
+
+                            return data.webPages
                         }
                     }),
     
@@ -277,6 +321,28 @@ const ChatPane = () => {
                             }
                             
                             return temp
+                        }
+                    }),
+
+                    getPageContents: tool({
+                        description: "Get the HTML contents for a URL. Does not include linked content such as CSS, JS, etc. You can repeat this function in order to crawl outwards from a page you've already used getPageContents for. You can also use this after running the getSearchData function in order to get more context.",
+                        parameters: z.object({
+                            url: z.string().url().describe("URL of the page to get the contents of")
+                        }),
+                        execute: async ({ url }) => {
+                            new Notice("Fetching " + url)
+                            console.log(url)
+                            const res = await fetch("http://192.168.1.101:4314/proxy", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    url
+                                })
+                            })
+
+                            return await res.text()
                         }
                     })
                 },
