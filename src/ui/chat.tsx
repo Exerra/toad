@@ -35,6 +35,14 @@ const ChatPane = () => {
     }
 
     const getResponseSDK = async () => {
+
+        // settings check
+        if (settings?.apiKey == "" || settings?.google.maps.apiKey == "") {
+            new Notice("API keys haven't been set. Aborting.")
+
+            return
+        }
+
         // "Property 'getAllFolders' does not exist on type 'Vault'."
         // yes it does
         // @ts-ignore
