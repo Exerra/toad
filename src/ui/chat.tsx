@@ -230,6 +230,7 @@ const ChatPane = () => {
                         description: "Get all folders. ALWAYS use this before running createNote.",
                         parameters: z.object({}),
                         execute: async () => {
+                            new Notice("Getting folders")
                             // @ts-ignore
                             return foldersArr.join("\n")
                         }
