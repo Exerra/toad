@@ -5,6 +5,8 @@ prerelease
 Supported features:
 - [x] AI chat
 - [x] Google Maps API
+- [x] Bing API
+- [x] Website fetching (requires proxy due to CORS)
 - [x] Active document fetching for context (DOES NOT include backlinks)
 - [x] Folder list fetch
 - [x] Note generation

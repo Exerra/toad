@@ -1,5 +1,5 @@
 import { MarkdownRenderer, MarkdownView, Notice, TFile } from "obsidian"
-import { useState, ChangeEvent, useRef } from "react"
+import { useState, ChangeEvent, useRef, KeyboardEvent } from "react"
 import { useApp } from "src/hooks/app"
 import { ExampleModal } from "./search"
 import { getAttachments } from "src/util/attachments"
@@ -121,7 +121,7 @@ const ChatPane = () => {
         }
 
 		let notes = attachments.filter(a => a.extension == "md")
-		let images = attachments.filter(a => a.extension == "png")
+		let images = attachments.filter(a => a.extension == "png" || a.extension == "jpg" || a.extension == "png")
 
         let userDiv = document.getElementById("ex-ai-markdown")?.createDiv("ex-ai-bubble ex-ai-user")
 
@@ -194,7 +194,7 @@ const ChatPane = () => {
         setFiles([])
 
         let systemInstructions = [
-            'If a user asks you something about "this" without no extra context, they more than likely want to talk about the currently open note.',
+            'If a user asks you something about "this", they more than likely want to talk about the currently open note.',
             'ALWAYS use getMapsData whenever geolocation data is needed.',
         ]
         
@@ -374,7 +374,6 @@ const ChatPane = () => {
     }
 
     const handleChatChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-
         let val = e.target.value
 
         setChatVal(e.target.value)
@@ -425,6 +424,13 @@ const ChatPane = () => {
         setIncludeBacklinks(val)
     }
 
+    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key == "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            getResponseSDK()
+        }
+    }
+
     return (
         <div id="ex-ai">
             <h1 style={{ marginBottom: 0 }}>{config.name}</h1>
@@ -450,7 +456,7 @@ const ChatPane = () => {
                 </ul> 
 
                 <div className="ex-ai-input">
-                    <textarea id="ex-ai-textarea" value={chatVal} onChange={handleChatChange} />
+                    <textarea onKeyDown={(e) => handleKeyDown(e)} id="ex-ai-textarea" value={chatVal} onChange={handleChatChange} />
                     <button onClick={() => {getResponseSDK()}}>↑</button>
                 </div>
             </div>
