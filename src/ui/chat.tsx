@@ -11,6 +11,7 @@ import { useSettings } from "src/hooks/settings"
 import { config } from "src/config"
 import { searchPlacesByText } from "src/util/maps"
 import { BingSearch } from "src/types/bing"
+import { createAnthropic } from "@ai-sdk/anthropic"
 
 const ChatPane = () => {
     const [ chatVal, setChatVal ] = useState<string>("")
@@ -49,8 +50,7 @@ const ChatPane = () => {
         // @ts-ignore
         let folders = app?.vault.getAllFolders(true)
 
-        // @ts-ignore
-        let foldersArr = []
+        let foldersArr: string[] = []
 
         for (let folder of folders) {
             foldersArr.push(folder.path)
@@ -62,6 +62,14 @@ const ChatPane = () => {
         })
 
         let model = openai(settings?.model!)
+
+
+        // ! Anthropic does not set CORS in order to encourage developers to create a backend so their API keys don't leak. Needs of the many outweigh the needs of the few here.
+        // const anthropic = createAnthropic({
+        //     apiKey: ""
+        // })
+
+        // let model = anthropic("claude-3-haiku-20240307")
 
         let fileValues = []
 
@@ -128,6 +136,8 @@ const ChatPane = () => {
         // @ts-ignore
         MarkdownRenderer.render(app!, chatVal, userDiv!, "", mdRef.current)
 
+        // TODO: figure out embedding for note search
+        // ? or maybe just create a note search function
         // let noteChunks = notes[0].content
         //     .split("\n")
         //     .map(chunk => chunk.trim())
